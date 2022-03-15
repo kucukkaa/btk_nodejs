@@ -9,6 +9,7 @@ exports.getProducts = (req, res, next) => {
         products: products,
         path: "/admin/products",
         action: req.query.action,
+        isAuthenticated: req.session.isAuthenticated,
       });
     })
     .catch((err) => {
@@ -17,19 +18,16 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getAddProduct = (req, res, next) => {
-  
   Category.findAll()
-  .then(categories=>{
-    res.render("admin/add-product", {
-      title: "New Product",
-      path: "/admin/add-product",
-      categories: categories
-    });
-  })
-  .catch()
-  
-  
-  
+    .then((categories) => {
+      res.render("admin/add-product", {
+        title: "New Product",
+        path: "/admin/add-product",
+        categories: categories,
+        isAuthenticated: req.session.isAuthenticated,
+      });
+    })
+    .catch();
 };
 
 exports.postAddProduct = (req, res, next) => {
@@ -37,23 +35,26 @@ exports.postAddProduct = (req, res, next) => {
   const price = req.body.price;
   const imageUrl = req.body.imageUrl;
   const description = req.body.description;
-  const categoryId = req.body.categoryId
-  const user = req.user
+  const categoryId = req.body.categoryId;
+  const user = req.user;
 
-  user.createProduct({name: name,
-    price: parseInt(price),
-    imageUrl: imageUrl,
-    description: description,
-    categoryId: categoryId,})
+  user
+    .createProduct({
+      name: name,
+      price: parseInt(price),
+      imageUrl: imageUrl,
+      description: description,
+      categoryId: categoryId
+    })
 
-  // Product.create({
-  //   name: name,
-  //   price: parseInt(price),
-  //   imageUrl: imageUrl,
-  //   description: description,
-  //   categoryId: categoryId,
-  //   userId: user.id
-  // })
+    // Product.create({
+    //   name: name,
+    //   price: parseInt(price),
+    //   imageUrl: imageUrl,
+    //   description: description,
+    //   categoryId: categoryId,
+    //   userId: user.id
+    // })
     .then((result) => {
       console.log(result);
       res.redirect("/");
@@ -74,6 +75,7 @@ exports.getEditProduct = (req, res, next) => {
           res.render("admin/edit-product", {
             title: "Edit Product",
             path: "/admin/products",
+            isAuthenticated: req.session.isAuthenticated,
             product: product,
             categories: categories,
           });
@@ -101,7 +103,7 @@ exports.postEditProduct = (req, res, next) => {
       product.imageUrl = imageUrl;
       product.description = description;
       product.price = parseInt(price);
-      product.categoryId = categoryId
+      product.categoryId = categoryId;
       return product.save();
     })
     .then((result) => {
@@ -114,13 +116,13 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.postDeleteProduct = (req, res, next) => {
   const id = req.body.productid;
- 
+
   Product.findByPk(id)
     .then((product) => {
       return product.destroy();
     })
-    .then(()=>{
-      res.redirect("/admin/products?action=delete")
+    .then(() => {
+      res.redirect("/admin/products?action=delete");
     })
     .catch((err) => {
       console.log(err);

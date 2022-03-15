@@ -14,6 +14,7 @@ exports.getIndex = (req, res, next) => {
             products: products,
             categories: categories,
             path: "/",
+            isAuthenticated: req.session.isAuthenticated,
           });
         })
         .catch((err) => {
@@ -34,6 +35,7 @@ exports.getProducts = (req, res, next) => {
             title: "Products",
             products: products,
             categories: categories,
+            isAuthenticated: req.session.isAuthenticated,
             path: "/products",
           });
         })
@@ -53,6 +55,7 @@ exports.getProduct = (req, res, next) => {
         title: product.name,
         product: product,
         path: "/products",
+        isAuthenticated: req.session.isAuthenticated,
       });
     })
     .catch((err) => {
@@ -68,6 +71,10 @@ exports.getCart = (req, res, next) => {
   req.user
     .getCart()
     .then((cart) => {
+      if (!cart) {
+        return req.user.createCart();
+      } return cart}) 
+    .then(cart=>{
       return cart
         .getProducts()
         .then((products) => {
@@ -75,6 +82,7 @@ exports.getCart = (req, res, next) => {
             title: "Cart",
             path: "/cart",
             products: products,
+            isAuthenticated: req.session.isAuthenticated
           });
         })
         .catch((err) => {
@@ -88,18 +96,18 @@ exports.getCart = (req, res, next) => {
 
 exports.getOrders = (req, res, next) => {
   req.user
-    .getOrders({include: ['products']})
+    .getOrders({ include: ["products"] })
     .then((orders) => {
       res.render("shop/orders", {
         title: "Orders",
         path: "/orders",
         orders: orders,
+        isAuthenticated: req.session.isAuthenticated,
       });
     })
     .catch((err) => {
       console.log(err);
     });
-
 };
 
 exports.getProductsByCategoryId = (req, res, next) => {
@@ -119,6 +127,7 @@ exports.getProductsByCategoryId = (req, res, next) => {
         categories: model.categories,
         path: "/products",
         categoryId: req.params.categoryid,
+        isAuthenticated: req.session.isAuthenticated,
       });
     })
     .catch((err) => {
@@ -201,6 +210,7 @@ exports.postOrder = (req, res, next) => {
               product.orderItem = {
                 quantity: product.cartItem.quantity,
                 price: product.price,
+                isAuthenticated: req.session.isAuthenticated,
               };
               return product;
             })

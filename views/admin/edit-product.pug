@@ -7,6 +7,7 @@ block content
     form(action="/admin/products" method="POST")
 
         input(type="hidden" name="id" value=`${product.id}`)
+        input(type="hidden" name="_csrf" value=`${csrfToken}`)
 
 
         div.form-group.row

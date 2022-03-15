@@ -13,16 +13,41 @@ const Cart = require("./models/cart");
 const CartItem = require("./models/cartItem");
 const Order = require("./models/order");
 const OrderItem = require("./models/orderItem");
+const accountRoutes = require("./routes/account");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const csurf = require('csurf')
+var SequelizeStore = require("connect-session-sequelize")(session.Store);
 
 app.set("view engine", "pug");
 app.set("views", "./views");
 
 app.use(bodyParser.urlencoded({ extended: false }));
-
+app.use(cookieParser());
+var myStore = new SequelizeStore({
+  db: sequelize,
+});
+app.use(
+  session({
+    secret: "keyboard cat",
+    store: myStore,
+    resave: false,
+    proxy: true,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 3600000,
+    },
+  })
+);
+myStore.sync();
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-  User.findByPk(1)
+  if (!req.session.user) {
+    return next();
+  }
+
+  User.findByPk(req.session.user.id)
     .then((user) => {
       req.user = user;
       next();
@@ -32,8 +57,10 @@ app.use((req, res, next) => {
     });
 });
 
+app.use(csurf())
 app.use("/admin", adminRoutes);
 app.use(userRoutes);
+app.use(accountRoutes);
 
 Product.belongsTo(Category, {
   foreignKey: {
@@ -50,44 +77,25 @@ Cart.belongsTo(User);
 Cart.belongsToMany(Product, { through: CartItem });
 Product.belongsToMany(Cart, { through: CartItem });
 
-Order.belongsTo(User)
-User.hasMany(Order)
+Order.belongsTo(User);
+User.hasMany(Order);
 
-Order.belongsToMany(Product, {through :OrderItem})
-Product.belongsToMany(Order, {through: OrderItem})
+Order.belongsToMany(Product, { through: OrderItem });
+Product.belongsToMany(Order, { through: OrderItem });
 
-let _user;
+
 sequelize
   //.sync({ force: true })
   .sync()
   .then(() => {
-    User.findByPk(1)
-      .then((user) => {
-        if (!user) {
-          return User.create({ name: "alierk", email: "alierk@gmail.com" });
-        }
-        return user;
-      })
-      .then((user) => {
-        _user = user;
-        return user.getCart();
-      })
-      .then((cart) => {
-        if (!cart) {
-          return _user.createCart();
-        }
-        return cart;
-      })
-      .then(() => {
-        Category.count().then((count) => {
-          if (count === 0) {
-            Category.bulkCreate([
-              { name: "Telefon", description: "telefon" },
-              { name: "Bilgisayar", description: "bilgisayar" },
-            ]);
-          }
-        });
-      });
+    Category.count().then((count) => {
+      if (count === 0) {
+        Category.bulkCreate([
+          { name: "Telefon", description: "telefon" },
+          { name: "Bilgisayar", description: "bilgisayar" },
+        ]);
+      }
+    });
   })
   .catch((err) => console.log(err));
 

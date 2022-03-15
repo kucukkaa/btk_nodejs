@@ -1,0 +1,16 @@
+#mySlider.carousel.slide.mb-3(data-bs-ride='carousel')
+    .carousel-indicators
+        button.active(type='button' data-bs-target='#mySlider' data-bs-slide-to='0')
+        button(type='button' data-bs-target='#mySlider' data-bs-slide-to='1')
+        button(type='button' data-bs-target='#mySlider' data-bs-slide-to='2')
+    .carousel-inner
+        .carousel-item.active
+            img.d-block.img-fluid(src='/img/img_mountains_wide.jpg' alt='')
+        .carousel-item
+            img.d-block.img-fluid(src='/img/img_nature_wide.jpg' alt='')
+        .carousel-item
+            img.d-block.img-fluid(src='/img/img_woods_wide.jpg' alt='')
+        button.carousel-control-prev(type='button' data-bs-target='#mySlider' data-bs-slide='prev')
+            span.carousel-control-prev-icon
+        button.carousel-control-next(type='button' data-bs-target='#mySlider' data-bs-slide='next')
+            span.carousel-control-next-icon
